@@ -1,0 +1,39 @@
+# documentation: https://docs.hedgedoc.org/
+# slogan: Hedgedoc is a collaborative note-taking app
+# tags: markdown
+# logo: svg/hedgedoc.svg
+# port: 3000
+
+services:
+  app:
+    image: "quay.io/hedgedoc/hedgedoc:latest"
+    environment:
+      - SERVICE_FQDN_HEDGEDOC
+      - SERVICE_URL_HEDGEDOC
+      - "CMD_DB_URL=postgres://$SERVICE_POSTGRES_USER:$SERVICE_POSTGRES_PASSWORD@database:5432/hedgedoc"
+      - CMD_DOMAIN=$SERVICE_URL_HEDGEDOC
+      - CMD_PORT=3000
+      - CMD_CSP_ENABLE=true
+      - CMD_PROTOCOL_USESSL=true
+      - CMD_URL_ADDPORT=false
+      - "CMD_ALLOW_ORIGIN=['localhost', $SERVICE_URL_HEDGEDOC]"
+    volumes:
+      - "uploads:/hedgedoc/public/uploads"
+    ports:
+      - 3000:3000
+    restart: always
+    depends_on:
+      - database
+  database:
+    image: "postgres:13.4-alpine"
+    environment:
+      - POSTGRES_USER=$SERVICE_POSTGRES_USER
+      - POSTGRES_PASSWORD=$SERVICE_POSTGRES_PASSWORD
+      - POSTGRES_DB=hedgedoc
+    volumes:
+      - "database:/var/lib/postgresql/data"
+    restart: always
+
+volumes:
+  database: null
+  uploads: null
