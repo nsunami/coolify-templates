@@ -1,0 +1,40 @@
+# documentation: https://hackmd.io/c/codimd-documentation
+# slogan: CodiMD - Realtime collaborative markdown notes on all platforms
+# tags: markdown, notes, realtime, collaboration, hackmd, codimd
+# logo: svgs/codimd.png
+# port: 3000
+
+services:
+  database:
+    image: "postgres:11.6-alpine"
+    environment:
+      - POSTGRES_USER=${SERVICE_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${SERVICE_POSTGRES_PASSWORD}
+      - POSTGRES_DB=codimd
+    volumes:
+      - "database-data:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+  codimd:
+    image: "nabo.codimd.dev/hackmdio/hackmd:2.5.3"
+    environment:
+      - "CMD_DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database/${POSTGRES_DB}"
+      - CMD_USECDN=false
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - "upload-data:/home/hackmd/app/public/uploads"
+    healthcheck:
+      test: ["CMD", "echo", "ok"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+volumes:
+  database-data: {}
+  upload-data: {}
